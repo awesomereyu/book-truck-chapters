@@ -259,3 +259,57 @@ export const isAdmin = (): boolean => {
   const user = getCurrentUser();
   return user?.role === "admin";
 };
+
+// Schedule Management
+export interface ScheduleEvent {
+  id: string;
+  date: string; // YYYY-MM-DD format
+  location: string;
+  startTime: string; // HH:MM format
+  endTime: string; // HH:MM format
+  isClosed: boolean;
+}
+
+export const initializeSchedule = () => {
+  if (!localStorage.getItem("schedule")) {
+    const defaultSchedule: ScheduleEvent[] = [
+      { id: "1", date: "2025-11-24", location: "Downtown Library", startTime: "16:00", endTime: "20:00", isClosed: false },
+      { id: "2", date: "2025-11-25", location: "Westside Community Center", startTime: "16:00", endTime: "20:00", isClosed: false },
+      { id: "3", date: "2025-11-26", location: "Eastside Park", startTime: "16:00", endTime: "20:00", isClosed: false },
+      { id: "4", date: "2025-11-27", location: "North End Plaza", startTime: "16:00", endTime: "20:00", isClosed: false },
+      { id: "5", date: "2025-11-28", location: "Closed - Thanksgiving", startTime: "", endTime: "", isClosed: true },
+      { id: "6", date: "2025-11-29", location: "South Bay Mall", startTime: "11:00", endTime: "15:00", isClosed: false },
+      { id: "7", date: "2025-11-30", location: "Central Square", startTime: "11:00", endTime: "15:00", isClosed: false },
+      { id: "8", date: "2025-12-01", location: "Downtown Library", startTime: "16:00", endTime: "20:00", isClosed: false },
+    ];
+    localStorage.setItem("schedule", JSON.stringify(defaultSchedule));
+  }
+};
+
+export const getSchedule = (): ScheduleEvent[] => {
+  const schedule = localStorage.getItem("schedule");
+  return schedule ? JSON.parse(schedule) : [];
+};
+
+export const setSchedule = (schedule: ScheduleEvent[]) => {
+  localStorage.setItem("schedule", JSON.stringify(schedule));
+};
+
+export const updateScheduleEvent = (event: ScheduleEvent) => {
+  const schedule = getSchedule();
+  const updatedSchedule = schedule.map(e => e.id === event.id ? event : e);
+  setSchedule(updatedSchedule);
+};
+
+export const addScheduleEvent = (event: Omit<ScheduleEvent, "id">) => {
+  const schedule = getSchedule();
+  const newEvent = { ...event, id: Date.now().toString() };
+  schedule.push(newEvent);
+  setSchedule(schedule);
+};
+
+export const deleteScheduleEvent = (id: string) => {
+  const schedule = getSchedule();
+  const updatedSchedule = schedule.filter(e => e.id !== id);
+  setSchedule(updatedSchedule);
+};

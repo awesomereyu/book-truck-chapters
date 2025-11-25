@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { initializeSampleData, initializeUsers } from "./lib/localStorage";
+import { initializeSampleData, initializeUsers, initializeSchedule } from "./lib/localStorage";
 import Index from "./pages/Index";
 import BrowseBooks from "./pages/BrowseBooks";
 import Dashboard from "./pages/Dashboard";
@@ -16,6 +16,7 @@ const queryClient = new QueryClient();
 // Initialize data on app load
 initializeSampleData();
 initializeUsers();
+initializeSchedule();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

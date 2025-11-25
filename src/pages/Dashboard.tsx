@@ -9,6 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScheduleManager } from "@/components/ScheduleManager";
 import { getVolunteers, Volunteer, getDonations, setVolunteers, getCurrentUser, logout, isAdmin } from "@/lib/localStorage";
 import { Download, Mail, ChevronDown, Users, Clock, MapPin, TrendingUp, Edit, LogOut } from "lucide-react";
 import { toast } from "sonner";
@@ -358,6 +359,11 @@ const Dashboard = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Schedule Manager - Admin Only */}
+        {isAdmin() && (
+          <ScheduleManager />
+        )}
       </div>
     </div>
   );
