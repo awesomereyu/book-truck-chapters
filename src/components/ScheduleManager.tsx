@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { getSchedule, updateScheduleEvent, ScheduleEvent, setSchedule } from "@/lib/localStorage";
+import { getSchedule, updateScheduleEvent, addScheduleEvent, ScheduleEvent, setSchedule } from "@/lib/localStorage";
 import { Calendar, Clock, Edit, MapPin, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
@@ -14,6 +14,7 @@ import { format, parseISO } from "date-fns";
 export const ScheduleManager = () => {
   const [schedule, setScheduleState] = useState<ScheduleEvent[]>([]);
   const [editingEvent, setEditingEvent] = useState<ScheduleEvent | null>(null);
+  const [isAddingEvent, setIsAddingEvent] = useState(false);
   const [formData, setFormData] = useState({
     date: "",
     location: "",
@@ -37,6 +38,17 @@ export const ScheduleManager = () => {
     });
   };
 
+  const handleAdd = () => {
+    setIsAddingEvent(true);
+    setFormData({
+      date: "",
+      location: "",
+      startTime: "16:00",
+      endTime: "20:00",
+      isClosed: false,
+    });
+  };
+
   const handleSave = () => {
     if (editingEvent) {
       const updatedEvent: ScheduleEvent = {
@@ -50,6 +62,11 @@ export const ScheduleManager = () => {
       setScheduleState(updatedSchedule);
       toast.success("Schedule updated successfully");
       setEditingEvent(null);
+    } else if (isAddingEvent) {
+      addScheduleEvent(formData);
+      setScheduleState(getSchedule());
+      toast.success("Event added successfully");
+      setIsAddingEvent(false);
     }
   };
 
@@ -73,11 +90,19 @@ export const ScheduleManager = () => {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
-            Schedule Management
-          </CardTitle>
-          <CardDescription>Manage book truck locations and hours</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                Schedule Management
+              </CardTitle>
+              <CardDescription>Manage book truck locations and hours</CardDescription>
+            </div>
+            <Button onClick={handleAdd}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Event
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -138,13 +163,16 @@ export const ScheduleManager = () => {
         </CardContent>
       </Card>
 
-      {/* Edit Dialog */}
-      <Dialog open={!!editingEvent} onOpenChange={() => setEditingEvent(null)}>
+      {/* Edit/Add Dialog */}
+      <Dialog open={!!editingEvent || isAddingEvent} onOpenChange={() => {
+        setEditingEvent(null);
+        setIsAddingEvent(false);
+      }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Schedule Event</DialogTitle>
+            <DialogTitle>{editingEvent ? "Edit" : "Add"} Schedule Event</DialogTitle>
             <DialogDescription>
-              Update the book truck schedule details
+              {editingEvent ? "Update" : "Create"} the book truck schedule details
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -204,11 +232,14 @@ export const ScheduleManager = () => {
             )}
 
             <div className="flex gap-2 justify-end pt-4">
-              <Button variant="outline" onClick={() => setEditingEvent(null)}>
+              <Button variant="outline" onClick={() => {
+                setEditingEvent(null);
+                setIsAddingEvent(false);
+              }}>
                 Cancel
               </Button>
               <Button onClick={handleSave}>
-                Save Changes
+                {editingEvent ? "Save Changes" : "Add Event"}
               </Button>
             </div>
           </div>

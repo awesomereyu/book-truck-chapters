@@ -30,6 +30,7 @@ export interface QuizResult {
 export interface Volunteer {
   id: string;
   name: string;
+  email: string;
   hours: number;
   location: string;
   recentActivity: string;
@@ -86,12 +87,12 @@ export const initializeSampleData = () => {
 
   if (!localStorage.getItem("volunteers")) {
     const sampleVolunteers: Volunteer[] = [
-      { id: "1", name: "Sarah Chen", hours: 18, location: "Downtown", recentActivity: "2025-11-20", tasksCompleted: 24 },
-      { id: "2", name: "Marcus Johnson", hours: 12, location: "Westside", recentActivity: "2025-11-21", tasksCompleted: 16 },
-      { id: "3", name: "Elena Rodriguez", hours: 4, location: "Eastside", recentActivity: "2025-11-19", tasksCompleted: 5 },
-      { id: "4", name: "David Park", hours: 22, location: "North End", recentActivity: "2025-11-22", tasksCompleted: 31 },
-      { id: "5", name: "Aisha Williams", hours: 8, location: "South Bay", recentActivity: "2025-11-18", tasksCompleted: 11 },
-      { id: "6", name: "James O'Connor", hours: 15, location: "Downtown", recentActivity: "2025-11-21", tasksCompleted: 19 },
+      { id: "1", name: "Sarah Chen", email: "sarah.chen@example.com", hours: 18, location: "Downtown", recentActivity: "2025-11-20", tasksCompleted: 24 },
+      { id: "2", name: "Marcus Johnson", email: "marcus.j@example.com", hours: 12, location: "Westside", recentActivity: "2025-11-21", tasksCompleted: 16 },
+      { id: "3", name: "Elena Rodriguez", email: "elena.r@example.com", hours: 4, location: "Eastside", recentActivity: "2025-11-19", tasksCompleted: 5 },
+      { id: "4", name: "David Park", email: "david.park@example.com", hours: 22, location: "North End", recentActivity: "2025-11-22", tasksCompleted: 31 },
+      { id: "5", name: "Aisha Williams", email: "aisha.w@example.com", hours: 8, location: "South Bay", recentActivity: "2025-11-18", tasksCompleted: 11 },
+      { id: "6", name: "James O'Connor", email: "james.o@example.com", hours: 15, location: "Downtown", recentActivity: "2025-11-21", tasksCompleted: 19 },
     ];
     localStorage.setItem("volunteers", JSON.stringify(sampleVolunteers));
   }
@@ -146,6 +147,13 @@ export const getVolunteers = (): Volunteer[] => {
 
 export const setVolunteers = (volunteers: Volunteer[]) => {
   localStorage.setItem("volunteers", JSON.stringify(volunteers));
+};
+
+export const addVolunteer = (volunteer: Omit<Volunteer, "id">) => {
+  const volunteers = getVolunteers();
+  const newVolunteer = { ...volunteer, id: Date.now().toString() };
+  volunteers.push(newVolunteer);
+  setVolunteers(volunteers);
 };
 
 export const getQuiz = (bookId: string): QuizQuestion[] => {
