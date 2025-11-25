@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { BookCard } from "@/components/BookCard";
 import { AboutModal } from "@/components/AboutModal";
+import { ScheduleCard } from "@/components/ScheduleCard";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -221,6 +222,13 @@ const Index = () => {
           </div>
         </section>
       )}
+
+      {/* Schedule Section */}
+      <section className="py-12 px-4 bg-warm">
+        <div className="container max-w-6xl mx-auto">
+          <ScheduleCard />
+        </div>
+      </section>
 
       {/* Books Grid */}
       <section className="py-12 px-4">
