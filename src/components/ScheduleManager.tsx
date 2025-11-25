@@ -14,6 +14,7 @@ import { format, parseISO } from "date-fns";
 export const ScheduleManager = () => {
   const [schedule, setScheduleState] = useState<ScheduleEvent[]>([]);
   const [editingEvent, setEditingEvent] = useState<ScheduleEvent | null>(null);
+  const [addingEvent, setAddingEvent] = useState(false);
   const [formData, setFormData] = useState({
     date: "",
     location: "",
@@ -53,6 +54,44 @@ export const ScheduleManager = () => {
     }
   };
 
+  const handleAdd = () => {
+    if (!formData.date || !formData.location) {
+      toast.error("Please enter date and location");
+      return;
+    }
+
+    const newEvent: ScheduleEvent = {
+      id: Date.now().toString(),
+      ...formData,
+    };
+
+    const updatedSchedule = [...schedule, newEvent].sort((a, b) => 
+      a.date.localeCompare(b.date)
+    );
+    setSchedule(updatedSchedule);
+    setScheduleState(updatedSchedule);
+    toast.success("Event added successfully");
+    setAddingEvent(false);
+    setFormData({
+      date: "",
+      location: "",
+      startTime: "",
+      endTime: "",
+      isClosed: false,
+    });
+  };
+
+  const handleOpenAdd = () => {
+    setFormData({
+      date: "",
+      location: "",
+      startTime: "16:00",
+      endTime: "20:00",
+      isClosed: false,
+    });
+    setAddingEvent(true);
+  };
+
   const handleDelete = (id: string) => {
     const updatedSchedule = schedule.filter(e => e.id !== id);
     setSchedule(updatedSchedule);
@@ -73,11 +112,19 @@ export const ScheduleManager = () => {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
-            Schedule Management
-          </CardTitle>
-          <CardDescription>Manage book truck locations and hours</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                Schedule Management
+              </CardTitle>
+              <CardDescription>Manage book truck locations and hours</CardDescription>
+            </div>
+            <Button onClick={handleOpenAdd}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Event
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -209,6 +256,92 @@ export const ScheduleManager = () => {
               </Button>
               <Button onClick={handleSave}>
                 Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Event Dialog */}
+      <Dialog open={addingEvent} onOpenChange={setAddingEvent}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Schedule Event</DialogTitle>
+            <DialogDescription>
+              Add a new book truck schedule entry
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="add-date">Date</Label>
+              <Input
+                id="add-date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="add-location">Location</Label>
+              <Input
+                id="add-location"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                placeholder="Enter location"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="add-closed"
+                checked={formData.isClosed}
+                onCheckedChange={(checked) => setFormData({ ...formData, isClosed: checked })}
+              />
+              <Label htmlFor="add-closed">Closed on this day</Label>
+            </div>
+
+            {!formData.isClosed && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="add-startTime">Start Time</Label>
+                    <Input
+                      id="add-startTime"
+                      type="time"
+                      value={formData.startTime}
+                      onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="add-endTime">End Time</Label>
+                    <Input
+                      id="add-endTime"
+                      type="time"
+                      value={formData.endTime}
+                      onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="flex gap-2 justify-end pt-4">
+              <Button variant="outline" onClick={() => {
+                setAddingEvent(false);
+                setFormData({
+                  date: "",
+                  location: "",
+                  startTime: "",
+                  endTime: "",
+                  isClosed: false,
+                });
+              }}>
+                Cancel
+              </Button>
+              <Button onClick={handleAdd}>
+                Add Event
               </Button>
             </div>
           </div>

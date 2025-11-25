@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScheduleManager } from "@/components/ScheduleManager";
 import { getVolunteers, Volunteer, getDonations, setVolunteers, getCurrentUser, logout, isAdmin } from "@/lib/localStorage";
-import { Download, Mail, ChevronDown, Users, Clock, MapPin, TrendingUp, Edit, LogOut } from "lucide-react";
+import { Download, Mail, ChevronDown, Users, Clock, MapPin, TrendingUp, Edit, LogOut, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 const Dashboard = () => {
@@ -21,6 +21,9 @@ const Dashboard = () => {
   const [selectedVolunteer, setSelectedVolunteer] = useState<Volunteer | null>(null);
   const [editingVolunteer, setEditingVolunteer] = useState<Volunteer | null>(null);
   const [editHours, setEditHours] = useState("");
+  const [addingVolunteer, setAddingVolunteer] = useState(false);
+  const [newVolunteerName, setNewVolunteerName] = useState("");
+  const [newVolunteerEmail, setNewVolunteerEmail] = useState("");
   const currentUser = getCurrentUser();
 
   useEffect(() => {
@@ -98,6 +101,30 @@ const Dashboard = () => {
       toast.success(`Updated hours for ${editingVolunteer.name}`);
       setEditingVolunteer(null);
     }
+  };
+
+  const handleAddVolunteer = () => {
+    if (!newVolunteerName.trim() || !newVolunteerEmail.trim()) {
+      toast.error("Please enter both name and email");
+      return;
+    }
+
+    const newVolunteer: Volunteer = {
+      id: Date.now().toString(),
+      name: newVolunteerName.trim(),
+      hours: 0,
+      location: "Not assigned",
+      recentActivity: new Date().toISOString().split('T')[0],
+      tasksCompleted: 0,
+    };
+
+    const updatedVolunteers = [...volunteers, newVolunteer];
+    setVolunteers(updatedVolunteers);
+    setVolunteersState(updatedVolunteers);
+    toast.success(`Added volunteer: ${newVolunteerName}`);
+    setAddingVolunteer(false);
+    setNewVolunteerName("");
+    setNewVolunteerEmail("");
   };
 
   if (!currentUser) {
@@ -194,8 +221,18 @@ const Dashboard = () => {
         {/* Volunteer Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Volunteer Details</CardTitle>
-            <CardDescription>Complete overview of all volunteers</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Volunteer Details</CardTitle>
+                <CardDescription>Complete overview of all volunteers</CardDescription>
+              </div>
+              {isAdmin() && (
+                <Button onClick={() => setAddingVolunteer(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Volunteer
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -354,6 +391,51 @@ const Dashboard = () => {
                 </Button>
                 <Button onClick={handleSaveHours}>
                   Save Changes
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Volunteer Dialog */}
+        <Dialog open={addingVolunteer} onOpenChange={setAddingVolunteer}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Volunteer</DialogTitle>
+              <DialogDescription>
+                Enter the volunteer's details
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="volunteerName">Name</Label>
+                <Input
+                  id="volunteerName"
+                  value={newVolunteerName}
+                  onChange={(e) => setNewVolunteerName(e.target.value)}
+                  placeholder="Enter volunteer name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="volunteerEmail">Email Address</Label>
+                <Input
+                  id="volunteerEmail"
+                  type="email"
+                  value={newVolunteerEmail}
+                  onChange={(e) => setNewVolunteerEmail(e.target.value)}
+                  placeholder="Enter email address"
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => {
+                  setAddingVolunteer(false);
+                  setNewVolunteerName("");
+                  setNewVolunteerEmail("");
+                }}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAddVolunteer}>
+                  Add Volunteer
                 </Button>
               </div>
             </div>
