@@ -29,7 +29,7 @@ export const Navbar = () => {
             <Link to="/donation" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
               Donation Form
             </Link>
-            <Link to="/dashboard" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
+            <Link to="/volunteer-login" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
               Volunteer Login
             </Link>
           </div>
@@ -56,8 +56,8 @@ export const Navbar = () => {
             <Link to="/donation" className="text-xs font-medium text-foreground hover:text-primary transition-smooth">
               Donate
             </Link>
-            <Link to="/dashboard" className="text-xs font-medium text-foreground hover:text-primary transition-smooth">
-              Dashboard
+            <Link to="/volunteer-login" className="text-xs font-medium text-foreground hover:text-primary transition-smooth">
+              Login
             </Link>
           </div>
         </div>
