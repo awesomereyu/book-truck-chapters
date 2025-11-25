@@ -217,3 +217,45 @@ export const getPrototypeMode = (): boolean => {
 export const setPrototypeMode = (enabled: boolean) => {
   localStorage.setItem("prototypeMode", enabled.toString());
 };
+
+// Authentication (client-side prototype only - NOT SECURE for production)
+export interface User {
+  id: string;
+  name: string;
+  role: "volunteer" | "admin";
+  password: string; // In real app, this would be hashed on backend
+}
+
+export const initializeUsers = () => {
+  if (!localStorage.getItem("users")) {
+    const defaultUsers: User[] = [
+      { id: "admin-1", name: "Admin", role: "admin", password: "admin123" },
+      { id: "vol-1", name: "Sarah Chen", role: "volunteer", password: "volunteer123" },
+    ];
+    localStorage.setItem("users", JSON.stringify(defaultUsers));
+  }
+};
+
+export const authenticateUser = (name: string, password: string): User | null => {
+  const users: User[] = JSON.parse(localStorage.getItem("users") || "[]");
+  const user = users.find(u => u.name === name && u.password === password);
+  if (user) {
+    localStorage.setItem("currentUser", JSON.stringify(user));
+    return user;
+  }
+  return null;
+};
+
+export const getCurrentUser = (): User | null => {
+  const user = localStorage.getItem("currentUser");
+  return user ? JSON.parse(user) : null;
+};
+
+export const logout = () => {
+  localStorage.removeItem("currentUser");
+};
+
+export const isAdmin = (): boolean => {
+  const user = getCurrentUser();
+  return user?.role === "admin";
+};

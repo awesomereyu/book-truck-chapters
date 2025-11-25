@@ -1,22 +1,35 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { getVolunteers, Volunteer, getDonations } from "@/lib/localStorage";
-import { Download, Mail, ChevronDown, Users, Clock, MapPin, TrendingUp } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { getVolunteers, Volunteer, getDonations, setVolunteers, getCurrentUser, logout, isAdmin } from "@/lib/localStorage";
+import { Download, Mail, ChevronDown, Users, Clock, MapPin, TrendingUp, Edit, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 const Dashboard = () => {
-  const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
+  const navigate = useNavigate();
+  const [volunteers, setVolunteersState] = useState<Volunteer[]>([]);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [selectedVolunteer, setSelectedVolunteer] = useState<Volunteer | null>(null);
+  const [editingVolunteer, setEditingVolunteer] = useState<Volunteer | null>(null);
+  const [editHours, setEditHours] = useState("");
+  const currentUser = getCurrentUser();
 
   useEffect(() => {
-    setVolunteers(getVolunteers());
-  }, []);
+    // Check if user is logged in
+    if (!currentUser) {
+      navigate("/volunteer-login");
+      return;
+    }
+    setVolunteersState(getVolunteers());
+  }, [currentUser, navigate]);
 
   const getVolunteerStatus = (hours: number) => {
     if (hours < 5) return { label: "Needs Help", color: "destructive", suggestion: "Needs extra help organizing donations." };
@@ -61,6 +74,35 @@ const Dashboard = () => {
     toast.success(`Email suggestion prepared for ${volunteer.name}`);
   };
 
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out successfully");
+    navigate("/volunteer-login");
+  };
+
+  const handleEditHours = (volunteer: Volunteer) => {
+    setEditingVolunteer(volunteer);
+    setEditHours(volunteer.hours.toString());
+  };
+
+  const handleSaveHours = () => {
+    if (editingVolunteer) {
+      const updatedVolunteers = volunteers.map(v =>
+        v.id === editingVolunteer.id
+          ? { ...v, hours: parseInt(editHours) || 0 }
+          : v
+      );
+      setVolunteers(updatedVolunteers);
+      setVolunteersState(updatedVolunteers);
+      toast.success(`Updated hours for ${editingVolunteer.name}`);
+      setEditingVolunteer(null);
+    }
+  };
+
+  if (!currentUser) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -70,12 +112,20 @@ const Dashboard = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Volunteer Dashboard</h1>
-            <p className="text-muted-foreground mt-1">Track volunteer activities and impact</p>
+            <p className="text-muted-foreground mt-1">
+              Welcome, {currentUser.name} {isAdmin() && <Badge className="ml-2">Admin</Badge>}
+            </p>
           </div>
-          <Button variant="outline" onClick={handleExportDashboard}>
-            <Download className="mr-2 h-4 w-4" />
-            Export Dashboard
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportDashboard}>
+              <Download className="mr-2 h-4 w-4" />
+              Export Dashboard
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          </div>
         </div>
 
         {/* KPI Cards */}
@@ -158,6 +208,7 @@ const Dashboard = () => {
                     <TableHead>Tasks Completed</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
+                    {isAdmin() && <TableHead>Admin</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -187,6 +238,18 @@ const Dashboard = () => {
                             <Mail className="h-4 w-4" />
                           </Button>
                         </TableCell>
+                        {isAdmin() && (
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditHours(volunteer)}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit Hours
+                            </Button>
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })}
@@ -263,6 +326,38 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Edit Hours Dialog */}
+        <Dialog open={!!editingVolunteer} onOpenChange={() => setEditingVolunteer(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Volunteer Hours</DialogTitle>
+              <DialogDescription>
+                Update hours for {editingVolunteer?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="hours">Hours Logged</Label>
+                <Input
+                  id="hours"
+                  type="number"
+                  value={editHours}
+                  onChange={(e) => setEditHours(e.target.value)}
+                  placeholder="Enter hours"
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setEditingVolunteer(null)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveHours}>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
