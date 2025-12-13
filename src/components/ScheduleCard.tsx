@@ -1,15 +1,31 @@
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfDay, isAfter, isEqual } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getSchedule, ScheduleEvent } from "@/lib/localStorage";
 import { Calendar, Clock, MapPin, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
+// Get current date in EST timezone
+const getESTDate = () => {
+  const now = new Date();
+  const estString = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+  return startOfDay(new Date(estString));
+};
+
 export const ScheduleCard = () => {
   const [schedule, setSchedule] = useState<ScheduleEvent[]>([]);
 
   useEffect(() => {
-    setSchedule(getSchedule());
+    const allEvents = getSchedule();
+    const todayEST = getESTDate();
+    
+    // Filter to only show today and future dates
+    const upcomingEvents = allEvents.filter((event) => {
+      const eventDate = startOfDay(parseISO(event.date));
+      return isAfter(eventDate, todayEST) || isEqual(eventDate, todayEST);
+    });
+    
+    setSchedule(upcomingEvents);
   }, []);
 
   const formatTime = (time: string) => {
