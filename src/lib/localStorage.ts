@@ -270,19 +270,138 @@ export interface ScheduleEvent {
   isClosed: boolean;
 }
 
+// Check if a date is a US federal holiday
+const isFederalHoliday = (date: Date): { isHoliday: boolean; name: string } => {
+  const month = date.getMonth(); // 0-indexed
+  const day = date.getDate();
+  const dayOfWeek = date.getDay(); // 0 = Sunday
+  const year = date.getFullYear();
+
+  // Fixed holidays
+  if (month === 0 && day === 1) return { isHoliday: true, name: "New Year's Day" };
+  if (month === 5 && day === 19) return { isHoliday: true, name: "Juneteenth" };
+  if (month === 6 && day === 4) return { isHoliday: true, name: "Independence Day" };
+  if (month === 10 && day === 11) return { isHoliday: true, name: "Veterans Day" };
+  if (month === 11 && day === 25) return { isHoliday: true, name: "Christmas" };
+
+  // MLK Day: 3rd Monday of January
+  if (month === 0 && dayOfWeek === 1) {
+    const firstMonday = new Date(year, 0, 1);
+    while (firstMonday.getDay() !== 1) firstMonday.setDate(firstMonday.getDate() + 1);
+    const thirdMonday = new Date(firstMonday);
+    thirdMonday.setDate(firstMonday.getDate() + 14);
+    if (day === thirdMonday.getDate()) return { isHoliday: true, name: "MLK Day" };
+  }
+
+  // Presidents Day: 3rd Monday of February
+  if (month === 1 && dayOfWeek === 1) {
+    const firstMonday = new Date(year, 1, 1);
+    while (firstMonday.getDay() !== 1) firstMonday.setDate(firstMonday.getDate() + 1);
+    const thirdMonday = new Date(firstMonday);
+    thirdMonday.setDate(firstMonday.getDate() + 14);
+    if (day === thirdMonday.getDate()) return { isHoliday: true, name: "Presidents Day" };
+  }
+
+  // Memorial Day: Last Monday of May
+  if (month === 4 && dayOfWeek === 1) {
+    const lastDay = new Date(year, 5, 0);
+    while (lastDay.getDay() !== 1) lastDay.setDate(lastDay.getDate() - 1);
+    if (day === lastDay.getDate()) return { isHoliday: true, name: "Memorial Day" };
+  }
+
+  // Labor Day: 1st Monday of September
+  if (month === 8 && dayOfWeek === 1) {
+    const firstMonday = new Date(year, 8, 1);
+    while (firstMonday.getDay() !== 1) firstMonday.setDate(firstMonday.getDate() + 1);
+    if (day === firstMonday.getDate()) return { isHoliday: true, name: "Labor Day" };
+  }
+
+  // Columbus Day: 2nd Monday of October
+  if (month === 9 && dayOfWeek === 1) {
+    const firstMonday = new Date(year, 9, 1);
+    while (firstMonday.getDay() !== 1) firstMonday.setDate(firstMonday.getDate() + 1);
+    const secondMonday = new Date(firstMonday);
+    secondMonday.setDate(firstMonday.getDate() + 7);
+    if (day === secondMonday.getDate()) return { isHoliday: true, name: "Columbus Day" };
+  }
+
+  // Thanksgiving: 4th Thursday of November
+  if (month === 10 && dayOfWeek === 4) {
+    const firstThursday = new Date(year, 10, 1);
+    while (firstThursday.getDay() !== 4) firstThursday.setDate(firstThursday.getDate() + 1);
+    const fourthThursday = new Date(firstThursday);
+    fourthThursday.setDate(firstThursday.getDate() + 21);
+    if (day === fourthThursday.getDate()) return { isHoliday: true, name: "Thanksgiving" };
+  }
+
+  return { isHoliday: false, name: "" };
+};
+
+// Default locations to rotate through
+const defaultLocations = [
+  "Downtown Library",
+  "Westside Community Center",
+  "Eastside Park",
+  "North End Plaza",
+  "South Bay Mall",
+  "Central Square",
+];
+
+// Generate schedule for upcoming days
+const generateSchedule = (daysAhead: number = 14): ScheduleEvent[] => {
+  const schedule: ScheduleEvent[] = [];
+  const now = new Date();
+  const estString = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+  const today = new Date(estString);
+  today.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < daysAhead; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    
+    const dayOfWeek = date.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const holiday = isFederalHoliday(date);
+    
+    const dateStr = date.toISOString().split("T")[0];
+    const locationIndex = i % defaultLocations.length;
+
+    if (holiday.isHoliday) {
+      schedule.push({
+        id: `auto-${dateStr}`,
+        date: dateStr,
+        location: `Closed - ${holiday.name}`,
+        startTime: "",
+        endTime: "",
+        isClosed: true,
+      });
+    } else {
+      schedule.push({
+        id: `auto-${dateStr}`,
+        date: dateStr,
+        location: defaultLocations[locationIndex],
+        startTime: isWeekend ? "11:00" : "16:00",
+        endTime: isWeekend ? "15:00" : "20:00",
+        isClosed: false,
+      });
+    }
+  }
+
+  return schedule;
+};
+
 export const initializeSchedule = () => {
-  if (!localStorage.getItem("schedule")) {
-    const defaultSchedule: ScheduleEvent[] = [
-      { id: "1", date: "2025-11-24", location: "Downtown Library", startTime: "16:00", endTime: "20:00", isClosed: false },
-      { id: "2", date: "2025-11-25", location: "Westside Community Center", startTime: "16:00", endTime: "20:00", isClosed: false },
-      { id: "3", date: "2025-11-26", location: "Eastside Park", startTime: "16:00", endTime: "20:00", isClosed: false },
-      { id: "4", date: "2025-11-27", location: "North End Plaza", startTime: "16:00", endTime: "20:00", isClosed: false },
-      { id: "5", date: "2025-11-28", location: "Closed - Thanksgiving", startTime: "", endTime: "", isClosed: true },
-      { id: "6", date: "2025-11-29", location: "South Bay Mall", startTime: "11:00", endTime: "15:00", isClosed: false },
-      { id: "7", date: "2025-11-30", location: "Central Square", startTime: "11:00", endTime: "15:00", isClosed: false },
-      { id: "8", date: "2025-12-01", location: "Downtown Library", startTime: "16:00", endTime: "20:00", isClosed: false },
-    ];
-    localStorage.setItem("schedule", JSON.stringify(defaultSchedule));
+  // Always regenerate schedule to keep it current
+  const existingSchedule = localStorage.getItem("schedule");
+  if (existingSchedule) {
+    // Keep manually added/edited events, regenerate auto ones
+    const existing: ScheduleEvent[] = JSON.parse(existingSchedule);
+    const manualEvents = existing.filter(e => !e.id.startsWith("auto-"));
+    const autoSchedule = generateSchedule(14);
+    const combined = [...autoSchedule, ...manualEvents].sort((a, b) => a.date.localeCompare(b.date));
+    localStorage.setItem("schedule", JSON.stringify(combined));
+  } else {
+    localStorage.setItem("schedule", JSON.stringify(generateSchedule(14)));
   }
 };
 
